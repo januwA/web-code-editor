@@ -1,0 +1,58 @@
+scrollbar()
+  & ::-webkit-scrollbar
+    size: 8px;
+
+  & ::-webkit-scrollbar-track
+    background: var(--bg);
+    border-radius: 1em;
+
+  & ::-webkit-scrollbar-thumb
+    background: var(--scrollbar-thumb);
+    border-radius: 1em;
+
+  & ::-webkit-scrollbar-thumb:hover
+    background: var(--scrollbar-thumb-hover);
+
+scrollbar2(size = 8px)
+  &::-webkit-scrollbar
+    size: size;
+
+  &::-webkit-scrollbar-track
+    background: var(--bg);
+    border-radius: 1em;
+
+  &::-webkit-scrollbar-thumb
+    background: var(--scrollbar-thumb);
+    border-radius: 1em;
+
+  &::-webkit-scrollbar-thumb:hover
+    background: var(--scrollbar-thumb-hover);
+
+blend-mode-bg()
+  --c1: rgb(101 100 100);
+  --c2: rgb(93 92 92);
+  color1 = var(--c1);
+  color2 = var(--c2);
+  background: repeating-linear-gradient(
+    -50deg,
+    color1,
+    color1 1em,
+    color2 2em,
+    color2 8em
+  );
+
+  &::before
+    content: ' ';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    mix-blend-mode: multiply;
+    background: repeating-linear-gradient(
+      50deg,
+      color1,
+      color1 1em,
+      color2 2em,
+      color2 8em
+    );

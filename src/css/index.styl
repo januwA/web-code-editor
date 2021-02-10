@@ -1,0 +1,22 @@
+@import './variable';
+@import './mixins';
+@import './pane1';
+@import './pane2';
+@import './pane3';
+@import './right-menu';
+@import './mask';
+
+.web-code-editor *
+  box-sizing: border-box;
+
+.web-code-editor
+  position: relative;
+  display: flex;
+  size: 100%;
+  background-color: var(--bg);
+  font-family: var(--font-family);
+
+  & ul
+    list-style: none;
+    padding: 0;
+    margin: 0;
