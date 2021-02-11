@@ -24,9 +24,10 @@ export declare class WebCodeEditor {
     rightMenu: RightMenu;
     mask: Mask;
     get titleTabs(): TitleTabs;
-    get codeMirror(): CodeMirror.Editor;
+    get editor(): CodeMirror.Editor;
     constructor(root: string | HTMLElement, initCodeMirror: initCodeMirror_t, opt?: {
         staticText?: AnyObject;
+        languageMap?: AnyObject;
     });
     showDirectoryPicker(): Promise<void>;
     addDir(hDir: any): Promise<void>;
@@ -78,7 +79,7 @@ declare class FileMenu extends WebCodeEditorWidget {
     getSize(): Promise<number>;
     constructor(wce: WebCodeEditor, hFile: any, dirMenu: DirMenu);
     menuClick: (e: MouseEvent) => void;
-    get name(): any;
+    get name(): string;
     del: () => void;
 }
 declare class DirMenu extends WebCodeEditorWidget {
@@ -149,9 +150,11 @@ declare class EditorTextarea extends WebCodeEditorWidget {
     private parent;
     code: HTMLElement;
     el: HTMLElement;
-    codeMirror: CodeMirror.Editor;
+    editor: CodeMirror.Editor;
     fontSize: number;
     constructor(wce: WebCodeEditor, parent: HTMLElement);
+    private handle_codeMirror;
+    private handle_monacoEditor;
 }
 export {};
 //# sourceMappingURL=WebCodeEditor.d.ts.map

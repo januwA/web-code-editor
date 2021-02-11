@@ -41,3 +41,11 @@ export const STATIC_TEXT = {
   errMeg: "必须提供文件或文件名",
   save: "保存",
 };
+
+export const LANGUAGE_MAP = {
+  md: "markdown",
+  ts: "typescript",
+  js: "javascript",
+  pl: "perl",
+  kt: "kotlin",
+};

@@ -40,4 +40,11 @@ export declare const STATIC_TEXT: {
     errMeg: string;
     save: string;
 };
+export declare const LANGUAGE_MAP: {
+    md: string;
+    ts: string;
+    js: string;
+    pl: string;
+    kt: string;
+};
 //# sourceMappingURL=consts.d.ts.map

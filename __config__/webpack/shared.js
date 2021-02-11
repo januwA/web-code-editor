@@ -141,7 +141,15 @@ module.exports = {
     new HtmlWebpackPlugin({
       inject: false,
       title: "web code editor",
-      template: util.htmlTemplatePath(),
+      filename: 'index.html',
+      template: util.htmlTemplatePath("index.html"),
+      cnd: util.externals2Cdn(externals, packageConfig.dependencies),
+    }),
+    new HtmlWebpackPlugin({
+      inject: false,
+      title: "web code editor",
+      filename: 'monaco.html',
+      template: util.htmlTemplatePath("monaco.html"),
       cnd: util.externals2Cdn(externals, packageConfig.dependencies),
     }),
   ],

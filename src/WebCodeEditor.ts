@@ -1,5 +1,5 @@
 import { cel, $ } from "./utils";
-import { CLASS_NAMES, STATIC_TEXT } from "./consts";
+import { CLASS_NAMES, LANGUAGE_MAP, STATIC_TEXT } from "./consts";
 import * as CodeMirror from "codemirror";
 import { AnyObject, initCodeMirror_t, RightMenuItem } from "./interfaces";
 import { Subject, SubjectNext_t } from "./subject";
@@ -73,8 +73,8 @@ export class WebCodeEditor {
     return this.pane3.titleTabs;
   }
 
-  get codeMirror() {
-    return this.pane3.codeContainer.codeMirror;
+  get editor() {
+    return this.pane3.codeContainer.editor;
   }
 
   constructor(
@@ -82,6 +82,7 @@ export class WebCodeEditor {
     public initCodeMirror: initCodeMirror_t,
     opt?: {
       staticText?: AnyObject;
+      languageMap?: AnyObject; // 使用monaco的时候使用的，根据文件后缀名设置lang
     }
   ) {
     const container = typeof root === "string" ? $(root) : root;
@@ -89,6 +90,10 @@ export class WebCodeEditor {
 
     if (opt?.staticText) {
       Object.assign(STATIC_TEXT, opt.staticText);
+    }
+
+    if (opt?.languageMap) {
+      Object.assign(LANGUAGE_MAP, opt.languageMap);
     }
 
     this.rootEl = cel("div", {
@@ -370,7 +375,7 @@ class FileMenu extends WebCodeEditorWidget {
     this.wce.titleTabs.add(this);
   };
 
-  get name() {
+  get name(): string {
     return this.hFile.name;
   }
 
@@ -560,7 +565,7 @@ class DirMenu extends WebCodeEditorWidget {
       });
       const child = new FileMenu(this.wce, hNewFile, this);
       this.wce.titleTabs.add(child);
-      this.wce.codeMirror.focus();
+      this.wce.editor.focus();
     });
   };
 
@@ -616,7 +621,7 @@ class TitleTab extends WebCodeEditorWidget {
     this.evContextmenu([
       {
         text: STATIC_TEXT.save,
-        click: () => this.save(this.wce.codeMirror.getValue()),
+        click: () => this.save(this.wce.editor.getValue()),
       },
       {
         divide: true,
@@ -729,7 +734,7 @@ class TitleTabs extends WebCodeEditorWidget {
   clear() {
     super.clear();
     this.tabs = [];
-    this.wce.codeMirror.setValue("");
+    this.wce.editor.setValue("");
     this.wce.pane3.imageContainer.hide();
     this.wce.pane3.codeContainer.hide();
   }
@@ -742,7 +747,24 @@ class TitleTabs extends WebCodeEditorWidget {
       this.wce.pane3.imageContainer.show(data);
     } else {
       this.wce.pane3.imageContainer.hide();
-      this.wce.codeMirror.setValue(data);
+      this.wce.editor.setValue(data);
+
+      let v: any = value.fileMenu.name.split(".");
+      const ext: string = v[v.length - 1];
+
+      const lang = (LANGUAGE_MAP as AnyObject)[ext]
+        ? (LANGUAGE_MAP as AnyObject)[ext]
+        : ext;
+
+      // monaco需要切换语言
+      if ((window as any).monaco) {
+        (window as any).monaco.editor.setModelLanguage(
+          (this.wce.editor as any).getModel(),
+          lang
+        );
+        //  查看当前语言
+        // editor.getModel().getLanguageIdentifier().language
+      }
     }
 
     if (!value.isVisible) {
@@ -769,7 +791,7 @@ class TitleTabs extends WebCodeEditorWidget {
         this.setCurrent(nextTab);
       } else {
         // 最后一个关闭了
-        this.wce.codeMirror.setValue("");
+        this.wce.editor.setValue("");
         this.wce.pane3.imageContainer.hide();
         this.wce.pane3.codeContainer.hide();
       }
@@ -902,40 +924,59 @@ class ImageContainer extends WebCodeEditorWidget {
 }
 
 class EditorTextarea extends WebCodeEditorWidget {
-  code = cel("code");
+  code = cel("code", {
+    style: {
+      display: "block",
+      height: "100%",
+      width: "100%",
+    },
+  });
   el = cel("pre", {
     className: CLASS_NAMES.editorTextarea,
     parent: this.parent,
     children: [this.code],
   });
-  codeMirror: CodeMirror.Editor;
-  fontSize: number;
+  editor: CodeMirror.Editor /* CodeMirror.Editor | monaco */;
+  fontSize!: number;
 
   constructor(wce: WebCodeEditor, private parent: HTMLElement) {
     super(wce);
     // https://codemirror.net/doc/manual.html
-    this.codeMirror = wce.initCodeMirror(this.code);
-    const CodeMirror = this.code.querySelector<HTMLElement>(".CodeMirror");
-    if (!CodeMirror) throw "not find CodeMirror.";
-
-    CodeMirror.classList.add(CLASS_NAMES.customCodeMirror);
+    this.editor = wce.initCodeMirror(this.code);
 
     this.evKeydown((e) => {
       if (e.ctrlKey && e.code === "KeyS") {
         e.preventDefault();
-        this.wce.titleTabs.current?.save(this.codeMirror.getValue());
+        this.wce.titleTabs.current?.save(this.editor.getValue());
       }
     });
 
-    // 滚轮修改字体大小
-    this.fontSize = parseFloat(getComputedStyle(CodeMirror).fontSize);
-    this.evWheel((e) => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-        this.fontSize += e.deltaY * -0.01;
-        this.fontSize = Math.max(12, this.fontSize);
-        CodeMirror.style.fontSize = `${this.fontSize}px`;
-      }
-    });
+    this.handle_codeMirror();
+    this.handle_monacoEditor();
+  }
+
+  private handle_codeMirror() {
+    const editorEl = this.code.querySelector<HTMLElement>(".CodeMirror");
+    if (editorEl) {
+      editorEl.classList.add(CLASS_NAMES.customCodeMirror);
+      // 滚轮修改字体大小
+      this.fontSize = parseFloat(getComputedStyle(editorEl).fontSize);
+      this.evWheel((e) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
+          this.fontSize += e.deltaY * -0.01;
+          this.fontSize = Math.max(12, this.fontSize);
+          editorEl.style.fontSize = `${this.fontSize}px`;
+        }
+      });
+    }
+  }
+
+  private handle_monacoEditor() {
+    const editorEl = this.code.querySelector<HTMLElement>(".monaco-editor");
+    if (editorEl) {
+      editorEl.style.width = "100%";
+      editorEl.style.height = "100%";
+    }
   }
 }

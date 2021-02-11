@@ -40,8 +40,8 @@ class Util {
   /**
    * 返回[HtmlWebpackPlugin]插件的[template]配置路径
    */
-  htmlTemplatePath() {
-    return path.resolve(this.rootPath(), "index.html");
+  htmlTemplatePath(name = "index.html") {
+    return path.resolve(this.rootPath(), name);
   }
 
   /**
