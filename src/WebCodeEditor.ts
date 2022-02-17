@@ -227,18 +227,12 @@ class Pane3 extends WebCodeEditorWidget {
   /**
    * 显示图片
    */
-  imageContainer: ImageContainer = new ImageContainer(
-    this.wce,
-    this.containerEl
-  );
+  imageContainer: ImageContainer = new ImageContainer(this.wce, this.containerEl);
 
   /**
    * 编辑和显示代码
    */
-  codeContainer: EditorTextarea = new EditorTextarea(
-    this.wce,
-    this.containerEl
-  );
+  codeContainer: EditorTextarea = new EditorTextarea(this.wce, this.containerEl);
 
   constructor(wce: WebCodeEditor) {
     super(wce);
@@ -309,8 +303,7 @@ class RightMenu extends WebCodeEditorWidget {
     this.clear();
     for (const menu of menus) {
       const className =
-        CLASS_NAMES.rightMenuItem +
-        (menu.divide ? ` ${CLASS_NAMES.rightMenuDivide}` : "");
+        CLASS_NAMES.rightMenuItem + (menu.divide ? ` ${CLASS_NAMES.rightMenuDivide}` : "");
       cel("li", {
         className,
         innerHTML: `<span class="text">${menu.text}</span>`,
@@ -515,6 +508,7 @@ class DirMenu extends WebCodeEditorWidget {
   get isOpen() {
     return this.files.classList.contains(CLASS_NAMES.dirOpen);
   }
+
   set isOpen(v: boolean) {
     if (v) {
       if (!this.isInit) this.createChildren();
@@ -541,13 +535,26 @@ class DirMenu extends WebCodeEditorWidget {
 
   // 创建子文件ui
   async createChildren() {
+    const dotdirs = [];
+    const dirs = [];
+    const dotfiles = [];
+    const files = [];
     for await (const [_, handle] of this.hDir) {
       if (handle.kind === "directory") {
-        new DirMenu(this.wce, handle, this.files, this.hDir);
+        if (handle.name.startsWith(".")) dotdirs.push(handle);
+        else dirs.push(handle);
       } else {
-        new FileMenu(this.wce, handle, this);
+        if (handle.name.startsWith(".")) dotfiles.push(handle);
+        else files.push(handle);
       }
     }
+    [...dotdirs, ...dirs].forEach((handle) => {
+      new DirMenu(this.wce, handle, this.files, this.hDir);
+    });
+    [...dotfiles, ...files].forEach((handle) => {
+      new FileMenu(this.wce, handle, this);
+    });
+
     this.isInit = true;
   }
 
@@ -571,6 +578,7 @@ class DirMenu extends WebCodeEditorWidget {
 
   newDir = () => {
     if (!this.isOpen) this.isOpen = true;
+
     new InputMenu(this, async (dirname: string) => {
       const hNewDir = await this.hDir.getDirectoryHandle(dirname, {
         create: true,
@@ -651,8 +659,7 @@ class TitleTab extends WebCodeEditorWidget {
     const self = this.el;
     return (
       self.offsetLeft >= parent.scrollLeft &&
-      self.offsetLeft + (self.clientWidth - 20) <
-        parent.clientWidth + parent.scrollLeft
+      self.offsetLeft + (self.clientWidth - 20) < parent.clientWidth + parent.scrollLeft
     );
   }
 
@@ -752,16 +759,18 @@ class TitleTabs extends WebCodeEditorWidget {
       let v: any = value.fileMenu.name.split(".");
       const ext: string = v[v.length - 1];
 
-      const lang = (LANGUAGE_MAP as AnyObject)[ext]
-        ? (LANGUAGE_MAP as AnyObject)[ext]
-        : ext;
+      // 文件后缀名与languageID匹配
+      let lang = ext;
+      for (const _ext of Object.keys(LANGUAGE_MAP)) {
+        if (_ext.toUpperCase() === ext.toUpperCase()) {
+          lang = (LANGUAGE_MAP as AnyObject)[_ext];
+          break;
+        }
+      }
 
       // monaco需要切换语言
       if ((window as any).monaco) {
-        (window as any).monaco.editor.setModelLanguage(
-          (this.wce.editor as any).getModel(),
-          lang
-        );
+        (window as any).monaco.editor.setModelLanguage((this.wce.editor as any).getModel(), lang);
         //  查看当前语言
         // editor.getModel().getLanguageIdentifier().language
       }
@@ -931,16 +940,18 @@ class EditorTextarea extends WebCodeEditorWidget {
       width: "100%",
     },
   });
-  el = cel("pre", {
-    className: CLASS_NAMES.editorTextarea,
-    parent: this.parent,
-    children: [this.code],
-  });
+  el: HTMLElement;
   editor: CodeMirror.Editor /* CodeMirror.Editor | monaco */;
   fontSize!: number;
 
   constructor(wce: WebCodeEditor, private parent: HTMLElement) {
     super(wce);
+    this.el = cel("pre", {
+      className: CLASS_NAMES.editorTextarea,
+      parent: this.parent,
+      children: [this.code],
+    });
+
     // https://codemirror.net/doc/manual.html
     this.editor = wce.initCodeMirror(this.code);
 

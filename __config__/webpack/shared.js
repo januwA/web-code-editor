@@ -2,9 +2,7 @@ const path = require("path");
 
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
-
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-
 const util = require("./util");
 const packageConfig = require("../../package.json");
 
@@ -44,9 +42,7 @@ module.exports = {
           options: {
             configFile: path.join(
               util.rootPath(),
-              process.env.NODE_ENV === "production"
-                ? "tsconfig.build.json"
-                : "tsconfig.json"
+              process.env.NODE_ENV === "production" ? "tsconfig.build.json" : "tsconfig.json"
             ),
           },
         },
@@ -55,8 +51,6 @@ module.exports = {
     {
       test: /\.styl$/,
       use: [
-        // 该插件将CSS提取到单独的文件中
-        // https://webpack.js.org/plugins/mini-css-extract-plugin/
         isDevMode ? "style-loader" : MiniCssExtractPlugin.loader,
         { loader: "css-loader", options: { importLoaders: 1 } },
         {
@@ -106,10 +100,6 @@ module.exports = {
       ],
     },
     {
-      test: /\.(csv|tsv)$/,
-      use: ["csv-loader"],
-    },
-    {
       test: /\.xml$/,
       use: ["xml-loader"],
     },
@@ -141,14 +131,14 @@ module.exports = {
     new HtmlWebpackPlugin({
       inject: false,
       title: "web code editor",
-      filename: 'index.html',
+      filename: "index.html",
       template: util.htmlTemplatePath("index.html"),
       cnd: util.externals2Cdn(externals, packageConfig.dependencies),
     }),
     new HtmlWebpackPlugin({
       inject: false,
       title: "web code editor",
-      filename: 'monaco.html',
+      filename: "monaco.html",
       template: util.htmlTemplatePath("monaco.html"),
       cnd: util.externals2Cdn(externals, packageConfig.dependencies),
     }),

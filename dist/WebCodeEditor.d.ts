@@ -11,6 +11,9 @@ export declare abstract class WebCodeEditorWidget {
     remove(): void;
     showMask(...args: any[]): () => void;
     hideMask(...args: any[]): void;
+    /**
+     * 重写右键菜单
+     */
     evContextmenu(fn?: ((e: MouseEvent) => void) | RightMenuItem[]): void;
     evKeydown(fn: (e: KeyboardEvent) => void): void;
     evWheel(fn: (e: WheelEvent) => void): void;
@@ -52,15 +55,30 @@ declare class Pane3 extends WebCodeEditorWidget {
     el: HTMLElement;
     containerEl: HTMLElement;
     titleTabs: TitleTabs;
+    /**
+     * 显示图片
+     */
     imageContainer: ImageContainer;
+    /**
+     * 编辑和显示代码
+     */
     codeContainer: EditorTextarea;
     constructor(wce: WebCodeEditor);
 }
 declare class Mask extends WebCodeEditorWidget {
     el: HTMLElement;
+    /**
+     * 点击mask时，通知所有订阅者,mask会自动关闭
+     */
     close$: Subject<MouseEvent>;
     constructor(wce: WebCodeEditor);
+    /**
+     * 设置mask背景色
+     */
     bg(bg: string): this;
+    /**
+     * 如果想监听mask关闭事件，可以传一个监听函数
+     */
     show(): void;
     show(closeFn?: SubjectNext_t<any>): () => void;
 }
@@ -108,6 +126,9 @@ declare class TitleTab extends WebCodeEditorWidget {
     isImage: boolean;
     get hFile(): any;
     constructor(tabs: TitleTabs, fileMenu: FileMenu);
+    /**
+     * 当前tab是否在可视区域
+     */
     get isVisible(): boolean;
     save(value: string): Promise<void>;
     get isActive(): boolean;
@@ -127,10 +148,26 @@ declare class TitleTabs extends WebCodeEditorWidget {
     clear(): void;
     setCurrent(value: TitleTab): Promise<void>;
     private nextTab;
+    /**
+     * 关闭单个tab
+     * @param fileMenu
+     */
     closeTab: (fileMenu: FileMenu) => void;
+    /**
+     * 目录关闭或删除时，对应的tab也会被清理
+     */
     closeWithDir(hDir: any): Promise<void>;
+    /**
+     * 关闭全部tab
+     */
     closeAllTab: () => void;
+    /**
+     * 关闭其他tab
+     */
     closeOtherTab: (tab: TitleTab) => void;
+    /**
+     * 关闭到右侧
+     */
     closeRightTab: (tab: TitleTab) => void;
     add(fileMenu: FileMenu): void;
 }
